@@ -1,4 +1,5 @@
 import re
+import os
 
 from telethon import events
 from utils.misc import modules_help
@@ -38,21 +39,32 @@ async def story(event: events.NewMessage.Event):
         if target_story.media:
             await event.edit("📥 Скачиваю и отправляю видео...")
 
+            file_name = f"story_{channel_username}_{target_story.id}.mp4"
+
             downloaded_file = await event.client.download_media(
-                target_story.media
+                target_story.media,
+                file=file_name
             )
 
             await event.respond(file=downloaded_file)
+
+            # Удаляем файл после отправки
+            try:
+                os.remove(downloaded_file)
+            except Exception as e:
+                await event.respond(f"⚠️ Не удалось удалить файл: {e}")
+
         else:
             await event.edit("❌ В этой сторис нет медиафайла.")
 
     except Exception as e:
         await event.edit(f"💥 Ошибка: {e}")
 
+
 handlers = [
     (story, command('info')),
 ]
 
 modules_help['story'] = {
-    'story [url]': 'скачать сторис'
+    'story [url]': 'скачать сторис и отправить в чат',
 }
