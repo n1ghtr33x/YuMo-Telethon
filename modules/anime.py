@@ -2,7 +2,7 @@ import aiohttp
 from telethon import events
 from utils.misc import modules_help
 from utils.scripts import command
-from googletrans import Translator
+from deep_translator import GoogleTranslator
 
 async def anime(event: events.NewMessage.Event):
     query = event.pattern_match.group(1)
@@ -37,8 +37,7 @@ async def anime(event: events.NewMessage.Event):
             # Перевод через Google Translate
             if synopsis and synopsis != "нет описания":
                 try:
-                    translated = Translator.translate(text=synopsis, dest='ru')
-                    translated_synopsis = translated.text
+                    translated_synopsis = GoogleTranslator(source='auto', target='ru').translate(synopsis)
                 except Exception:
                     translated_synopsis = "❌ Не удалось перевести описание."
             else:
