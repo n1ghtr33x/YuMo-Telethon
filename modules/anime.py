@@ -8,45 +8,47 @@ async def anime(event: events.NewMessage.Event):
 
     await event.edit("🔍 Ищу аниме...")
 
-    url = f"https://api.jikan.moe/v4/anime?q={query}&limit=1"
+    jikan_url = f"https://api.jikan.moe/v4/anime?q={query}&limit=1"
     translate_url = "https://libretranslate.de/translate"
 
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
+            # Получаем аниме
+            async with session.get(jikan_url) as resp:
                 if resp.status != 200:
-                    await event.edit("❌ Ошибка при обращении к Jikan API.")
+                    await event.edit("❌ Не удалось получить данные с Jikan API.")
                     return
                 data = await resp.json()
 
-        results = data.get("data")
-        if not results:
-            await event.edit("❌ Ничего не найдено.")
-            return
+            results = data.get("data")
+            if not results:
+                await event.edit("❌ Ничего не найдено.")
+                return
 
-        anime = results[0]
+            anime = results[0]
 
-        title = anime.get("title")
-        title_jp = anime.get("title_japanese", "")
-        episodes = anime.get("episodes", "неизвестно")
-        score = anime.get("score", "N/A")
-        status = anime.get("status", "N/A")
-        synopsis = anime.get("synopsis", "нет описания")[:500] + "..."
-        url = anime.get("url")
-        image = anime.get("images", {}).get("jpg", {}).get("image_url")
+            title = anime.get("title")
+            title_jp = anime.get("title_japanese", "")
+            episodes = anime.get("episodes", "неизвестно")
+            score = anime.get("score", "N/A")
+            status = anime.get("status", "N/A")
+            synopsis = anime.get("synopsis", "нет описания")[:1000]
+            url = anime.get("url")
+            image = anime.get("images", {}).get("jpg", {}).get("image_url")
 
-        translated_synopsis = "❌ Перевод недоступен."
-        if synopsis and synopsis != "нет описания":
-            translate_payload = {
-                "q": synopsis,
-                "source": "en",
-                "target": "ru",
-                "format": "text"
-            }
-            async with session.post(translate_url, json=translate_payload) as resp:
-                if resp.status == 200:
-                    translated = await resp.json()
-                    translated_synopsis = translated.get("translatedText", translated_synopsis)
+            # Переводим описание
+            translated_synopsis = "❌ Перевод недоступен."
+            if synopsis and synopsis != "нет описания":
+                translate_payload = {
+                    "q": synopsis,
+                    "source": "en",
+                    "target": "ru",
+                    "format": "text"
+                }
+                async with session.post(translate_url, json=translate_payload) as resp:
+                    if resp.status == 200:
+                        translated = await resp.json()
+                        translated_synopsis = translated.get("translatedText", translated_synopsis)
 
         caption = (
             f"🎌 <b>{title}</b> ({title_jp})\n\n"
@@ -58,10 +60,11 @@ async def anime(event: events.NewMessage.Event):
         )
 
         await event.delete()
-        await event.respond(caption, file=image, link_preview=False, parse_mode='html')
+        await event.respond(caption, file=image, link_preview=False)
 
     except Exception as e:
         await event.edit(f"💥 Ошибка: {e}")
+
 
 handlers = [
     (anime, command('anime'))
