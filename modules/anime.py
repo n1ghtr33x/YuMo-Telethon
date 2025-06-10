@@ -9,6 +9,7 @@ async def anime(event: events.NewMessage.Event):
     await event.edit("🔍 Ищу аниме...")
 
     url = f"https://api.jikan.moe/v4/anime?q={query}&limit=1"
+    translate_url = "https://libretranslate.de/translate"
 
     try:
         async with aiohttp.ClientSession() as session:
@@ -34,12 +35,25 @@ async def anime(event: events.NewMessage.Event):
         url = anime.get("url")
         image = anime.get("images", {}).get("jpg", {}).get("image_url")
 
+        translated_synopsis = "❌ Перевод недоступен."
+        if synopsis and synopsis != "нет описания":
+            translate_payload = {
+                "q": synopsis,
+                "source": "en",
+                "target": "ru",
+                "format": "text"
+            }
+            async with session.post(translate_url, json=translate_payload) as resp:
+                if resp.status == 200:
+                    translated = await resp.json()
+                    translated_synopsis = translated.get("translatedText", translated_synopsis)
+
         caption = (
             f"🎌 <b>{title}</b> ({title_jp})\n\n"
             f"📺 Эпизоды: {episodes}\n"
             f"⭐ Оценка: {score}\n"
             f"📡 Статус: {status}\n\n"
-            f"📖 Описание:\n{synopsis}\n\n"
+            f"📖 <b>Описание:</b>\n{translated_synopsis}\n\n"
             f"🔗 <a href='{url}'>MyAnimeList</a>"
         )
 
