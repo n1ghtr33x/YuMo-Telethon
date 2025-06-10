@@ -9,7 +9,7 @@ async def anime(event: events.NewMessage.Event):
     await event.edit("🔍 Ищу аниме...")
 
     jikan_url = f"https://api.jikan.moe/v4/anime?q={query}&limit=1"
-    translate_url = "https://libretranslate.de/translate"
+    translate_url = "https://translate.argosopentech.com/translate"
 
     try:
         async with aiohttp.ClientSession() as session:
