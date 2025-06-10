@@ -56,7 +56,7 @@ async def anime(event: events.NewMessage.Event):
         caption = caption[:MAX_CAPTION_LENGTH - 3] + '...' if len(caption) > MAX_CAPTION_LENGTH else caption
 
         try:
-            await event.respond(caption, file=image, link_preview=False)
+            await event.respond(caption, file=image, link_preview=False, parse_mode='html')
         except Exception as e:
             # fallback, если и отправка не сработала
             await event.reply(f"💥 Не удалось отправить сообщение: {e}")
