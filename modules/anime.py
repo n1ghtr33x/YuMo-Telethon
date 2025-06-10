@@ -44,7 +44,7 @@ async def anime(event: events.NewMessage.Event):
         )
 
         await event.delete()
-        await event.respond(caption, file=image, link_preview=False)
+        await event.respond(caption, file=image, link_preview=False, parse_mode='html')
 
     except Exception as e:
         await event.edit(f"💥 Ошибка: {e}")
