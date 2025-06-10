@@ -14,7 +14,7 @@ async def story(event: events.NewMessage.Event):
     try:
         match = re.match(r"https://t.me/([^/]+)/s/(\d+)", url)
         if not match:
-            await event.respond("❌ Неверный формат URL. Пример: https://t.me/channel_username/s/story_id")
+            await event.edit("❌ Неверный формат URL. Пример: https://t.me/channel_username/s/story_id")
             return
 
         channel_username = match.group(1)
@@ -30,13 +30,13 @@ async def story(event: events.NewMessage.Event):
         found_stories = stories_result.stories
 
         if not found_stories:
-            await event.respond(f"❌ Сторис с ID {story_id} не найдена в канале @{channel_username}.")
+            await event.edit(f"❌ Сторис с ID {story_id} не найдена в канале @{channel_username}.")
             return
 
         target_story: StoryItem = found_stories[0]
 
         if target_story.media:
-            await event.respond("📥 Скачиваю и отправляю видео...")
+            await event.edit("📥 Скачиваю и отправляю видео...")
 
             downloaded_file = await event.client.download_media(
                 target_story.media
@@ -44,10 +44,10 @@ async def story(event: events.NewMessage.Event):
 
             await event.respond(file=downloaded_file)
         else:
-            await event.respond("❌ В этой сторис нет медиафайла.")
+            await event.edit("❌ В этой сторис нет медиафайла.")
 
     except Exception as e:
-        await event.respond(f"💥 Ошибка: {e}")
+        await event.edit(f"💥 Ошибка: {e}")
 
 handlers = [
     (story, command('info')),
