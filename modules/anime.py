@@ -2,21 +2,20 @@ import aiohttp
 from telethon import events
 from utils.misc import modules_help
 from utils.scripts import command
+from googletrans import Translator
 
 async def anime(event: events.NewMessage.Event):
     query = event.pattern_match.group(1)
-
     await event.edit("🔍 Ищу аниме...")
 
     jikan_url = f"https://api.jikan.moe/v4/anime?q={query}&limit=1"
-    translate_url = "https://translate.argosopentech.com/translate"
 
     try:
         async with aiohttp.ClientSession() as session:
-            # Получаем аниме
+            # Запрос к Jikan API
             async with session.get(jikan_url) as resp:
                 if resp.status != 200:
-                    await event.edit("❌ Не удалось получить данные с Jikan API.")
+                    await event.edit("❌ Ошибка при получении данных с Jikan API.")
                     return
                 data = await resp.json()
 
@@ -26,7 +25,6 @@ async def anime(event: events.NewMessage.Event):
                 return
 
             anime = results[0]
-
             title = anime.get("title")
             title_jp = anime.get("title_japanese", "")
             episodes = anime.get("episodes", "неизвестно")
@@ -36,19 +34,15 @@ async def anime(event: events.NewMessage.Event):
             url = anime.get("url")
             image = anime.get("images", {}).get("jpg", {}).get("image_url")
 
-            # Переводим описание
-            translated_synopsis = "❌ Перевод недоступен."
+            # Перевод через Google Translate
             if synopsis and synopsis != "нет описания":
-                translate_payload = {
-                    "q": synopsis,
-                    "source": "en",
-                    "target": "ru",
-                    "format": "text"
-                }
-                async with session.post(translate_url, json=translate_payload) as resp:
-                    if resp.status == 200:
-                        translated = await resp.json()
-                        translated_synopsis = translated.get("translatedText", translated_synopsis)
+                try:
+                    translated = Translator.translate(text=synopsis, dest='ru')
+                    translated_synopsis = translated.text
+                except Exception:
+                    translated_synopsis = "❌ Не удалось перевести описание."
+            else:
+                translated_synopsis = "❌ Описание отсутствует."
 
         caption = (
             f"🎌 <b>{title}</b> ({title_jp})\n\n"
@@ -56,7 +50,6 @@ async def anime(event: events.NewMessage.Event):
             f"⭐ Оценка: {score}\n"
             f"📡 Статус: {status}\n\n"
             f"📖 <b>Описание:</b>\n{translated_synopsis}\n\n"
-            f"🔗 <a href='{url}'>MyAnimeList</a>"
         )
 
         await event.delete()
